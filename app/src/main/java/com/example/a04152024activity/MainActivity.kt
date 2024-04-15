@@ -3,7 +3,6 @@ package com.example.a04152024activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,8 +24,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,16 +57,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TipTimeLayout() {
 
-    var roundUp by remember { mutableStateOf(false) }
-
-    var amountInput by remember { mutableStateOf("") }
+    // For the amount Input so the program can remember its state and values
+    var amountInput by remember { mutableStateOf("")}
+    // Converting the amount Input to double or if it's not convertable into a Double it will become null, but since the use of "?:"
+    // elvis operator null changes into 0.0
     val amount = amountInput.toDoubleOrNull() ?: 0.0
 
-    var tipPercentage by remember { mutableStateOf("") }
-    val totalPercentage = tipPercentage.toDoubleOrNull() ?: 0.0
+    var tipInput by remember { mutableStateOf("")}
+    val tipPercentage = tipInput.toDoubleOrNull() ?: 0.0
 
-    val tip = calculateTip(amount, totalPercentage, roundUp)
+    var roundUp by remember { mutableStateOf(false)}
 
+    val tip = calculateTip(amount, tipPercentage, roundUp)
     Column(
         modifier = Modifier
             .statusBarsPadding()
@@ -85,90 +86,95 @@ fun TipTimeLayout() {
         )
 
         EditNumberField(amountInput,
-            onValueChange = { amountInput = it },
             R.string.bill_amount,
-            keyboardOptions = KeyboardOptions.Default.copy(
+            KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next
             ),
+            onValueChange = { amountInput = it},
             modifier = Modifier
-                .padding(bottom = 32.dp)
-                .fillMaxWidth())
+            .padding(bottom = 32.dp)
+            .fillMaxWidth())
 
-        EditNumberField(tipPercentage,
-            onValueChange = { tipPercentage = it },
+        EditNumberField(tipInput,
             R.string.how_was_the_service,
-            keyboardOptions = KeyboardOptions.Default.copy(
+            KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done ),
+                imeAction = ImeAction.Done
+            ),
+            onValueChange = { tipInput = it},
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth())
 
-        RoundTheTipRow(
-            roundUp = roundUp,
+        // calling the function RoundTheTipRow and supplmenting the required parameters for it
+        RoundTheTipRow(roundUp,
             onRoundUpChanged = { roundUp = it },
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+            modifier = Modifier.padding(bottom = 32.dp))
 
         Text(
             text = stringResource(R.string.tip_amount, tip),
             style = MaterialTheme.typography.displaySmall
         )
 
+        // To add space :|
         Spacer(modifier = Modifier.height(150.dp))
     }
 }
 
 private fun calculateTip(amount: Double, tipPercent: Double = 15.0, roundUp: Boolean): String {
-
     var tip = tipPercent / 100 * amount
 
-    if (roundUp) {
+    if(roundUp){
+        // always round up
         tip = kotlin.math.ceil(tip)
     }
 
     return NumberFormat.getCurrencyInstance().format(tip)
 }
 
+// For Text Input from the user
 @Composable
-fun EditNumberField(amountInput: String,
-                    onValueChange: (String) -> Unit,
-                    @StringRes label: Int,
+fun EditNumberField(amountInput:String,
+                    label: Int,
                     keyboardOptions: KeyboardOptions,
+                    onValueChange: (String) -> Unit,
                     modifier: Modifier = Modifier) {
 
     TextField(
         value = amountInput,
         onValueChange = onValueChange,
         modifier = modifier,
-        singleLine = true,
-        label = { Text(stringResource(label))},
-        keyboardOptions = keyboardOptions
+        singleLine = false,
+        keyboardOptions = keyboardOptions,
+        label = { Text(stringResource(label)) },
     )
 }
 
+// Function for the Round up or as is button
 @Composable
-fun RoundTheTipRow(roundUp: Boolean,
-                   onRoundUpChanged: (Boolean) -> Unit,
-                   modifier: Modifier = Modifier)
-{
+fun RoundTheTipRow(roundUp: Boolean, onRoundUpChanged: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .size(48.dp),
         verticalAlignment = Alignment.CenterVertically
-    ) { Text(text = stringResource(R.string.round_up_tip))
+    ) {
+        Text(text = stringResource(R.string.round_up_tip))
 
+        // The calling of button
         Switch(
             checked = roundUp,
             onCheckedChange = onRoundUpChanged,
-            modifier = Modifier.fillMaxWidth()
-            .wrapContentWidth(Alignment.End)
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.End)
         )
     }
 }
 
+
+// To show the Preview of the code usually seen at the Split tab
 @Preview (showBackground = true)
 @Composable
 fun Preview(){
